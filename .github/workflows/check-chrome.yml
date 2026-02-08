@@ -1,0 +1,42 @@
+name: Check Chrome Release
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"   # every 6 hours
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Get latest Chrome stable version
+        id: chrome
+        run: |
+          VERSION=$(curl -s https://omahaproxy.appspot.com/all.json \
+            | jq -r '.[] | select(.os=="win") | .versions[] | select(.channel=="stable") | .current_version')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Read last stored version
+        id: last
+        run: |
+          if [ -f chrome-version.txt ]; then
+            echo "version=$(cat chrome-version.txt)" >> $GITHUB_OUTPUT
+          else
+            echo "version=none" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Detect new version
+        if: steps.chrome.outputs.version != steps.last.outputs.version
+        run: |
+          echo "New Chrome version detected!"
+          echo "${{ steps.chrome.outputs.version }}" > chrome-version.txt
+
+      - name: Commit updated version
+        if: steps.chrome.outputs.version != steps.last.outputs.version
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "New Chrome stable release ${{ steps.chrome.outputs.version }}"
