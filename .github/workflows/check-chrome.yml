@@ -16,8 +16,8 @@ jobs:
       - name: Get latest Chrome stable version
         id: chrome
         run: |
-          VERSION=$(curl -s https://omahaproxy.appspot.com/all.json \
-            | jq -r '.[] | select(.os=="win") | .versions[] | select(.channel=="stable") | .current_version')
+          set -euo pipefail
+          VERSION=$(curl -fsSL https://omahaproxy.appspot.com/linux)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Read last stored version
