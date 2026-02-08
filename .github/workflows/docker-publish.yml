@@ -6,6 +6,9 @@ name: Docker
 # documentation.
 
 on:
+  workflow_run:
+    workflows: ["Check Chrome Release"]
+    types: [completed]
 #  schedule:
 #    - cron: '35 0 * * *'
 #  push:
